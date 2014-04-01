@@ -7,12 +7,16 @@
 #define GLEW_STATIC
 #define GLUT_DISABLE_ATEXIT_HACK
 #define GLAPI extern
-#endif
-
-//opengl and window stuff
 #include <GL/glew.h>
 #include <GL/freeglut.h>
 #include <GL/GL.h>
+#endif
+
+#ifndef WIN32
+#include <GL/glew.h>
+#include <GL/freeglut.h>
+#include <GL/gl.h>
+#endif
 
 //other classes
 #include "camera.h"
