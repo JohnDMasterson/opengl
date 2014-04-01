@@ -111,18 +111,7 @@ void Game::trialSettings()
 		0.0f, -1.0f, 0.0f
 	};
 
-	int asdf = 10000000;
-	float * absurd = new float[3* asdf];
-	for (int i = 0; i < asdf; i++)
-	{
-		absurd[3 * i] = 0.0f;
-		absurd[3 * i+1] = 0.0f;
-		absurd[3 * i+2] = 0.0f;
-	}
-
-	tri->addVertices(absurd, asdf);
-	
-	delete[] absurd;
+	tri->addVertices(verts, 4);
 
 
 	int inds[] = {

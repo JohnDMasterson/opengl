@@ -109,7 +109,8 @@ void DObject::addVertices(float * vertices, int numVertices)
 		newList[i + _numVertices].coords[2] = vertices[3*i+2];
 	}
 
-	delete[] _vertices;
+	///why did this not work? was causing errors
+	///delete[] _vertices;
 	_vertices = newList;
 	_numVertices = totalVerts;
 }
@@ -205,7 +206,6 @@ void DObject::generateVBO()
 	glGenBuffers(1, &_VBO);
 	glBindBuffer(GL_ARRAY_BUFFER, _VBO);
 	glBufferData(GL_ARRAY_BUFFER, _numVertices * sizeof(VertNorm), _vertices, GL_STATIC_DRAW);
-	cout << _numVertices * sizeof(VertNorm) << endl;
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
@@ -218,8 +218,7 @@ void DObject::generateIBO()
 		GLuint iTemp;
 		glGenBuffers(1, &iTemp);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, iTemp);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, it->second * sizeof(it->first), it->first, GL_STATIC_DRAW);
-		cout << it->second * sizeof(it->first) << endl;
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, it->second * sizeof(*it->first), it->first, GL_STATIC_DRAW);
 		_IBO.push_back( pair<GLuint,int>(iTemp,it->second));
 	}
 

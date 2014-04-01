@@ -15,19 +15,6 @@ int main(int argv, char ** argc)
 	initCallbacks();
 
 	_myGame->trialSettings();
-	_myGame->trialSettings();
-	_myGame->trialSettings();
-	_myGame->trialSettings();
-	_myGame->trialSettings();
-	_myGame->trialSettings();
-	_myGame->trialSettings();
-	_myGame->trialSettings();
-	_myGame->trialSettings();
-	_myGame->trialSettings();
-	_myGame->trialSettings();
-	_myGame->trialSettings();
-	_myGame->trialSettings();
-	_myGame->trialSettings();
 
 	glutMainLoop();
 

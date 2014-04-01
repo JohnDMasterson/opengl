@@ -1,6 +1,6 @@
 SHELL		= /bin/sh
 EXE 		= fighter
-BUILDDIR	= bin/
+BUILDDIR	= ../bin
 SRCDIR		= src/
 OBJS		= math3d.o readfile.o camera.o dobj.o spherebounded.o game.o main.o
 COMP 		= g++
@@ -14,10 +14,13 @@ DOBJ_OBJS 	= dobj.h math3d.h dobj.cpp
 READ_OBJS 	= readfile.cpp readfile.h
 COMP_OPTS 	= -c -g -O0 -Werror
 
+
 all: $(EXE)
 
 $(EXE): $(OBJS)
-	$(COMP) $(LINK) $(OBJS) -o $(EXE)
+	mkdir -p $(BUILDDIR)
+	$(COMP) $(LINK) $(OBJS) -o $(BUILDDIR)/$(EXE)
+	cp -r ../include/* $(BUILDDIR)
 
 main.o: $(MAIN_OBJS)
 	$(COMP) $(COMP_OPTS) $(MAIN_OBJS) 
@@ -41,4 +44,5 @@ readfile.o: $(READ_OBJS)
 	$(COMP) $(COMP_OPTS) $(READ_OBJS)
 
 clean:
-	-rm -f *.o *.h.gch $(EXE)
+	-rm -f *.o *.h.gch 
+	-rm -f  -r $(BUILDDIR)/*
