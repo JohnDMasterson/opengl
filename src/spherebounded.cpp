@@ -24,6 +24,7 @@ SBObject::SBObject(const char* filename)
 		if(word == "v")
 		{
 			//This line is a vertice then
+			cout << "word!" << endl;
 			ss >> word;
 			int dim = 0;
 			float vert[4];
@@ -38,6 +39,7 @@ SBObject::SBObject(const char* filename)
 			//dim tells you how many dimensions were included
 		}else if(word == "f")
 		{
+			cout << "face" << endl;
 			//This line is a face
 			//faces holds all ints for every face
 			vector<int> faces;

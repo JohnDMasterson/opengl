@@ -19,7 +19,6 @@
 #include <GL/gl.h>
 #endif
 
-
 //my files to include
 #include "dobj.h"
 #include "math3d.h"
