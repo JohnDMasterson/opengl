@@ -29,7 +29,9 @@
 //other includes
 #include <iostream>
 #include <vector>
-
+#include <stdlib.h> // atof
+#include <sstream>  // stringstream
+#include <fstream> // ifstream
 
 
 class SBObject : public DObject
@@ -37,6 +39,7 @@ class SBObject : public DObject
 	public:
 		//constructors and destructors
 		SBObject();
+		SBObject(const char* filename);
 		~SBObject();
 
 		void init();

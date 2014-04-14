@@ -8,6 +8,82 @@ SBObject::SBObject()
 	setPosition(Vector3f(0.0f, 0.0f, 0.0f));
 }
 
+SBObject::SBObject(const char* filename)
+{
+	ifstream file(filename);
+	string temp;
+	while(getline(file,temp))
+	{
+		stringstream ss;
+		ss.str(temp);
+		string word;
+		ss >> word;
+
+		bool texture = false;
+		bool normal = false;
+		if(word == "v")
+		{
+			//This line is a vertice then
+			ss >> word;
+			int dim = 0;
+			float vert[4];
+			while(ss.good() && dim < 4)
+			{
+				vert[dim] = atof(word.c_str());
+				ss >> word;
+				dim++;
+			}
+			
+			//vert holds up to 4 dimensions
+			//dim tells you how many dimensions were included
+		}else if(word == "f")
+		{
+			//This line is a face
+			//faces holds all ints for every face
+			vector<int> faces;
+			while(ss.good())
+			{
+				if(texture && !normal)
+				{
+					// of form v/t
+					int v = 0, t = 0;
+					sscanf(word.c_str(), " %i / %i ", &v, &t);
+					faces.push_back(v);
+					faces.push_back(t);
+				}else if (!texture && normal)
+				{
+					// of form v/ /n
+					int v = 0, n = 0;
+					if( sscanf(word.c_str(), " %i / / %i ", &v, &n) < 2)
+					{
+						// tries hidden int on inside
+						int temp;
+						sscanf(word.c_str(), " %i / %i / %i ", &v, &temp, &n);
+					}
+					faces.push_back(v);
+					faces.push_back(n);
+				}else if( texture && normal)
+				{
+					// of form v/t/n
+					int v = 0, t = 0, n = 0;
+					sscanf(word.c_str(), " %i / %i / %i ", &v, &t, &n);
+					faces.push_back(v);
+					faces.push_back(t);
+					faces.push_back(n);
+				}else
+				{
+					// of form v
+					int v = 0;
+					sscanf(word.c_str(), " %i ", &v);
+					faces.push_back(v);
+				}
+				ss >> word;
+			}
+
+		}
+	}
+}
+
 SBObject::~SBObject()
 {
 	//delete program when object is deleted
