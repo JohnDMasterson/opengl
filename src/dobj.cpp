@@ -5,25 +5,178 @@ using namespace std;
 
 DObject::DObject()
 {
-	_numVertices = 0;
 }
 
 DObject::~DObject()
 {
-	// deletes all vertices
-	delete[] _vertices;
+}
 
-	//deletes all indices
-	vector< pair< int*, int> >::iterator it;
-	for (it = _indices.begin(); it != _indices.end(); it++)
+DObject::DObject(const char* filename)
+{
+	ifstream file(filename);
+	string temp;
+
+
+	objFile thisObj;
+	while(getline(file,temp))
 	{
-		delete[] it->first;
+		stringstream ss;
+		ss.str(temp);
+		string word;
+		ss >> word;
+
+		if(word == "v")
+		{
+			//This line is a vertice then
+
+			int dim = 0;
+			float * vert = new float[4];
+			while(ss.good() && dim < 4)
+			{	
+				ss >> word;
+				vert[dim] = atof(word.c_str());
+				dim++;
+			}
+			while(dim < 4)
+			{
+				vert[dim] = 0.0f;
+				dim++;
+			}
+
+			if(dim == 3 || dim == 4)
+			{
+				thisObj.vertices.push_back(vert);
+			}
+		}else if(word == "f")
+		{
+			//This line is a face
+			//faces holds all ints for every face
+			word = ss.peek();
+			string part = word;
+			objFace thisFace;
+
+			//tests for what type of face this is 
+			int temp;
+			int a = sscanf(part.c_str(), " %i ", &temp);
+			int b = sscanf(part.c_str(), " %i / %i ", &temp, &temp);
+			int c = sscanf(part.c_str(), " %i // %i ", &temp, &temp);
+			int d = sscanf(part.c_str(), " %i / %i / %i ", &temp, &temp, &temp);
+			if(a >= b && a>=c && a>=d)
+			{
+				thisFace.textures = false;
+				thisFace.norms = false;
+			}else if (b >=a && b >= c && b >= d)
+			{
+				thisFace.textures = true;
+				thisFace.norms = false;
+			}else if (c >=a && c >= b && c >= d)
+			{
+				thisFace.textures = false;
+				thisFace.norms = true;
+			}else if (d >=a && d >= b && d >= c)
+			{
+				thisFace.textures = true;
+				thisFace.norms = true;
+			}else
+			{
+				break;
+			}
+
+			while(ss.good())
+			{
+				ss >> word;
+				int * tripple = new int[3];
+				if(!thisFace.textures && !thisFace.norms)
+				{
+					// of form v/t
+					int v = 0;
+					sscanf(word.c_str(), " %i ", &v);
+					tripple[0] = v;
+					tripple[1] = 0;
+					tripple[2] = 0;
+					thisFace.indices.push_back(tripple);
+				}else if(thisFace.textures && !thisFace.norms)
+				{
+					// of form v/t
+					int v = 0, t = 0;
+					sscanf(word.c_str(), " %i / %i ", &v, &t);
+					tripple[0] = v;
+					tripple[1] = t;
+					tripple[2] = 0;
+					thisFace.indices.push_back(tripple);
+				}else if(!thisFace.textures && thisFace.norms)
+				{
+					// of form v/t
+					int v = 0, n = 0;
+					sscanf(word.c_str(), " %i // %i ", &v, &n);
+					tripple[0] = v;
+					tripple[1] = 0;
+					tripple[2] = n;
+					thisFace.indices.push_back(tripple);
+				}else if(thisFace.textures && thisFace.norms)
+				{
+					// of form v/t
+					int v = 0, t = 0, n = 0;
+					sscanf(word.c_str(), " %i / %i / %i ", &v, &t, &n);
+					tripple[0] = v;
+					tripple[1] = t;
+					tripple[2] = n;
+					thisFace.indices.push_back(tripple);
+				}
+			}
+			thisObj.faces.push_back(thisFace);
+		}else if(word == "vn")
+		{
+			float * tripple = new float[3];
+			int dim = 0;
+			while(ss.good() && dim < 3)
+			{
+				ss >> word;
+				tripple[dim] = atof(word.c_str());
+				dim++;
+			}
+			while(dim < 3)
+			{
+				tripple[dim] = 0.0f;
+			}
+			thisObj.norms.push_back(tripple);
+		}else if(word == "vt")
+		{
+			float * tripple = new float[3];
+			int dim = 0;
+			while(ss.good() && dim < 3)
+			{
+				ss >> word;
+				tripple[dim] = atof(word.c_str());
+				dim++;
+			}
+			while(dim < 3)
+			{
+				tripple[dim] = 0.0f;
+			}
+			thisObj.tcoords.push_back(tripple);
+		}
 	}
 
 
+
+
+
+
+
+	addVertice(0.0f, 0.0f, 0.0f);
+	//adds vertices to object after loading
+	for(int i = 0; i < thisObj.vertices.size(); i++)
+	{
+		addVertice(thisObj.vertices[i][0],thisObj.vertices[i][1],thisObj.vertices[i][2]);
+	}
+
+	for(int i = 0; i < thisObj.faces.size(); i++)
+	{
+		addFace(thisObj.faces[i].indices);
+	}
+
 }
-
-
 
 
 void DObject::setCanCollide(bool canCollide)
@@ -86,50 +239,30 @@ void DObject::setCameraPosition(Vector3f position)
 }
 
 
-
-
-
-
-
-
-
-
-void DObject::addVertices(float * vertices, int numVertices)
+void DObject::addVertice(float x, float y, float z)
 {
-	int totalVerts = _numVertices + numVertices;
-	VertNorm * newList = new VertNorm[totalVerts];
-	for (int i = 0; i < _numVertices; i++)
-	{
-		newList[i] = _vertices[i];
-	}
-	for (int i = 0; i < numVertices; i++)
-	{
-		newList[i + _numVertices].coords[0] = vertices[3*i];
-		newList[i + _numVertices].coords[1] = vertices[3*i+1];
-		newList[i + _numVertices].coords[2] = vertices[3*i+2];
-	}
+	VertNorm temp;
+	temp.coords[0] = x;
+	temp.coords[1] = y;
+	temp.coords[2] = z;
+	temp.coords[3] = 0.0f;
+	temp.coords[4] = 0.0f;
+	temp.coords[5] = 0.0f;
 
-	///why did this not work? was causing errors
-	///delete[] _vertices;
-	_vertices = newList;
-	_numVertices = totalVerts;
+	_vertnorm.push_back(temp);
 }
 
-
-/*
-*	adds a new entry to the index array.
-*	vertex normals should be calculated separately after all index arrays and vertiecs are added
-*/
-void DObject::addIndexArray(int * indices, int numIndices)
+void DObject::addFace(vector< int * > face)
 {
-	//creates a new indice array and adds it to the back of the indice vector
-	int * indicesToAdd = new int[numIndices];
-	for (int i = 0; i < numIndices; i++)
+	for(int i = 0; i < face.size(); i++)
 	{
-		indicesToAdd[i] = indices[i];
+		VTN temp;
+		temp.vtn[0] = face[i][0];
+		temp.vtn[1] = face[i][1];
+		temp.vtn[2] = face[i][2];
+		_faces.push_back(temp);
 	}
-
-	_indices.push_back(pair<int *, int>(indicesToAdd, numIndices));
+	_vertsInFace.push_back(face.size());
 }
 
 /*
@@ -139,26 +272,49 @@ void DObject::addIndexArray(int * indices, int numIndices)
 */
 void DObject::generateNormals()
 {
+
 	//resets all normals to (0,0,0)
-	for (int i = 0; i < _numVertices; i++)
+	for (int i = 0; i < _vertnorm.size(); i++)
 	{
-		_vertices[i].coords[3] = 0;
-		_vertices[i].coords[4] = 0;
-		_vertices[i].coords[5] = 0;
+		_vertnorm[i].coords[3] = 0;
+		_vertnorm[i].coords[4] = 0;
+		_vertnorm[i].coords[5] = 0;
 	}
 
-	//incriments through all index arrays
-	vector< pair< int*, int> >::iterator it;
-	for (it = _indices.begin(); it != _indices.end(); it++)
+
+	//incriments through all faces
+	int last = 0;
+	count = new GLsizei[_vertsInFace.size()];
+	indices = new GLvoid*[_vertsInFace.size()];
+	for (int i = 0; i < _vertsInFace.size(); i++)
 	{
-		int * temp = it->first;
-		//increments through all drawn triangles and adds their normal to the vertice normal
-		for (int i = 0; i < it->second-2; i+=3)
+		for(int j = 0; j<_vertsInFace[i]; j++)
 		{
-			//gets the three points in the triangle
-			Vector3f a(_vertices[temp[i]].coords[0], _vertices[temp[i]].coords[1], _vertices[temp[i]].coords[2]);
-			Vector3f b(_vertices[temp[i+1]].coords[0], _vertices[temp[+1]].coords[1], _vertices[temp[i+1]].coords[2]);
-			Vector3f c(_vertices[temp[i+2]].coords[0], _vertices[temp[i+2]].coords[1], _vertices[temp[i+2]].coords[2]);
+			//finds index in _vertnorm
+
+			int prevIndex;
+			if(j == 0)
+				prevIndex = last+_vertsInFace[i];
+			else
+				prevIndex = last+j-1;
+
+			prevIndex = _faces[prevIndex].vtn[0];
+
+			int nextIndex;
+			if(j == _vertsInFace[i]-1)
+				nextIndex = last;
+			else
+				nextIndex = last+j;
+
+			nextIndex = _faces[nextIndex].vtn[0];
+
+			int thisIndex = _faces[j].vtn[0];
+
+
+			//gets the current, previous, and next point from indices
+			Vector3f a(_vertnorm[thisIndex].coords[0],_vertnorm[thisIndex].coords[1],_vertnorm[thisIndex].coords[2]);
+			Vector3f b(_vertnorm[prevIndex].coords[0],_vertnorm[prevIndex].coords[1],_vertnorm[prevIndex].coords[2]);
+			Vector3f c(_vertnorm[nextIndex].coords[0],_vertnorm[nextIndex].coords[1],_vertnorm[nextIndex].coords[2]);
 
 			//gets two vectors from the points
 			Vector3f ab = a - b;
@@ -169,60 +325,61 @@ void DObject::generateNormals()
 			abcNorm.unitize();
 
 			//adds the normal to the points normal list
-			_vertices[temp[i]].coords[3] += abcNorm.x;
-			_vertices[temp[i]].coords[4] += abcNorm.y;
-			_vertices[temp[i]].coords[5] += abcNorm.z;
-
-			_vertices[temp[i+1]].coords[3] += abcNorm.x;
-			_vertices[temp[i+1]].coords[4] += abcNorm.y;
-			_vertices[temp[i+1]].coords[5] += abcNorm.z;
-
-			_vertices[temp[i+2]].coords[3] += abcNorm.x;
-			_vertices[temp[i+2]].coords[4] += abcNorm.y;
-			_vertices[temp[i+2]].coords[5] += abcNorm.z;
+			_vertnorm[thisIndex].coords[3] += abcNorm.x;
+			_vertnorm[thisIndex].coords[4] += abcNorm.y;
+			_vertnorm[thisIndex].coords[5] += abcNorm.z;
 		}
+		count[i] = _vertsInFace[i];
 
+		int temp = 0;
+		for(int j = 0; j < i; j++)
+			temp += _vertsInFace[j];
+		indices[i] = (GLvoid*) (temp*sizeof(GLuint));
 	}
 
 	//normalizes all of the vertex normals
-	for (int i = 0; i < _numVertices; i++)
+	for (int i = 0; i < _vertnorm.size(); i++)
 	{
 		Vector3f temp;
-		temp.x = _vertices[i].coords[3];
-		temp.y = _vertices[i].coords[4];
-		temp.z = _vertices[i].coords[5];
+		temp.x = _vertnorm[i].coords[3];
+		temp.y = _vertnorm[i].coords[4];
+		temp.z = _vertnorm[i].coords[5];
 
 		temp.unitize();
 
 
-		_vertices[i].coords[3] = temp.x;
-		_vertices[i].coords[4] = temp.y;
-		_vertices[i].coords[5] = temp.z;
+		_vertnorm[i].coords[3] = temp.x;
+		_vertnorm[i].coords[4] = temp.y;
+		_vertnorm[i].coords[5] = temp.z;
 	}
+
 }
 
 void DObject::generateVBO()
 {
+	VertNorm * temp = new VertNorm[_vertnorm.size()];
+	for(int i = 0; i < _vertnorm.size(); i++)
+	{
+		temp[i] = _vertnorm[i];
+	}
+
 	glGenBuffers(1, &_VBO);
 	glBindBuffer(GL_ARRAY_BUFFER, _VBO);
-	glBufferData(GL_ARRAY_BUFFER, _numVertices * sizeof(VertNorm), _vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, _vertnorm.size() * sizeof(VertNorm), temp, GL_STATIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 
 void DObject::generateIBO()
 {
-	vector< pair< int*, int> >::iterator it;
-	for (it = _indices.begin(); it != _indices.end(); it++)
+	int * temp = new int[_faces.size()];
+	for(int i = 0; i < _faces.size(); i++)
 	{
-		GLuint iTemp;
-		glGenBuffers(1, &iTemp);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, iTemp);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, it->second * sizeof(*it->first), it->first, GL_STATIC_DRAW);
-		_IBO.push_back( pair<GLuint,int>(iTemp,it->second));
+		temp[i] = _faces[i].vtn[0];
 	}
-
-
+	glGenBuffers(1, &_IBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _IBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, _faces.size() * sizeof(int), temp, GL_STATIC_DRAW);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
@@ -234,7 +391,7 @@ void DObject::draw()
 
 	//bind VBO
 	glBindBuffer(GL_ARRAY_BUFFER, _VBO);
-
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _IBO);
 	glUseProgram(_sp);
 
 	//enable vertices
@@ -245,17 +402,28 @@ void DObject::draw()
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(VertNorm), (const GLvoid*)12);
 
 
+
+	glUniform3f(_lcolor, _lc.x, _lc.y, _lc.z);
+	glUniform3f(_cposition, _cp.x, _cp.y, _cp.z);
+	glUniform1f(_ambient, _a2);
+	glUniform1f(_diffuse, _d2);
+	glUniform1f(_specular, _s2);
+	glUniform3f(_lposition, _lp.x, _lp.y, _lp.z);
+
+
+	//load matrices 
+	Matrix4f fTemp = _cameraPerspective * getTranslationMatrix();
+	glUniformMatrix4fv(_gWVP, 1, GL_TRUE, &fTemp.points[0][0]);
+
+
+
+
+
+
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-	//cycle through all IBOs and draw
-	vector< pair<GLuint,int> >::iterator it;
-	for (it = _IBO.begin(); it != _IBO.end(); it++)
-	{
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, it->first);
-		glDrawElements(GL_TRIANGLES, it->second , GL_UNSIGNED_INT, 0);
-	}
-
+	glMultiDrawElements(GL_POLYGON, count , GL_UNSIGNED_INT, (const GLvoid** )indices, _vertsInFace.size());
 
 	//disable shader
 	glUseProgram(0);
@@ -346,15 +514,57 @@ bool DObject::createShaderProgram(const char* vertFile, const char* fragFile)
 	glDeleteShader(_fs);
 
 
+
+	//GLSL variables
+	_gWVP = glGetUniformLocation(_sp, "gWVP");
+    _lcolor = glGetUniformLocation(_sp, "sunlight.color");
+    _ambient = glGetUniformLocation(_sp, "sunlight.ambient");
+    _diffuse = glGetUniformLocation(_sp, "sunlight.diffuse");
+    _specular = glGetUniformLocation(_sp, "sunlight.specular");
+    _lposition= glGetUniformLocation(_sp, "sunlight.position");
+    _cposition = glGetUniformLocation(_sp, "sunlight.camera");
+
+
 	return true;
 }
 
-void DObject::printVerticesToTerminal()
+
+
+
+
+
+
+
+void DObject::setLightColor(Vector3f color)
 {
-	for (int i = 0; i < _numVertices; i++)
-	{
-		cout << "Vertice: ( " << _vertices[i].coords[0] << "," << _vertices[i].coords[1] << "," << _vertices[i].coords[2] << ")" << endl;
-		cout << "Normal: ( " << _vertices[i].coords[3] << "," << _vertices[i].coords[4] << "," << _vertices[i].coords[5] << ")" << endl;
-		cout << endl;
-	}
+	_lc = color;
+}
+
+void DObject::setLightAmbient(float intensity)
+{
+	_a2 = intensity;
+}
+
+void DObject::setLightDiffuse(float intensity)
+{
+	_d2 = intensity;
+}
+
+void DObject::setLightSpecular(float intensity)
+{
+	_s2 = intensity;
+}
+
+void DObject::setLightPosition(Vector3f position)
+{
+	_lp = position;
+}
+
+void DObject::initLight(Vector3f position, float aInt, float dInt, float sInt, Vector3f color)
+{
+	glUniform3f(_lposition, position.x, position.y, position.z);
+	glUniform1f(_specular, aInt);
+	glUniform1f(_diffuse, dInt);
+	glUniform1f(_specular, sInt);
+	glUniform3f(_lcolor, color.x, color.y, color.z);
 }

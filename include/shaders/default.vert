@@ -1,13 +1,16 @@
-#version 430
+#version 440
 
 layout (location = 0) in vec3 Pos;
 layout (location = 1) in vec3 Norm;
 
-out vec4 tNorms;
+out vec3 tNorms;
+out vec3 tPos;
 
+uniform mat4 gWVP;
 
 void main()
 {
-	gl_Position = vec4(Pos, 1.0);
-	tNorms = vec4(Norm, 1.0);
+	tNorms = Norm;
+	tPos = Pos;
+	gl_Position = gWVP*vec4(Pos, 1.0);
 }

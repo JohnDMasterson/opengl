@@ -30,7 +30,13 @@ bool Game::init(int argv, char** argc)
 {
 	//initializes glut
 	glutInit(&argv, argc);
+	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
+	glutInitWindowSize(800,800);
+	_xres = _yres = 800;
 	glutCreateWindow("Cross Compile Trial 1");
+
+
+	glutSetCursor(GLUT_CURSOR_NONE);
 
 	//ANTI-ALIASING
 	glEnable(GL_LINE_SMOOTH);
@@ -66,6 +72,10 @@ void Game::keyboardFunc(char key, int x, int y)
 {
 	_key[key] = true;
 }
+void Game::keyboardLiftFunc(char key, int x, int y)
+{
+	_key[key] = false;
+}
 
 
 /*
@@ -76,16 +86,40 @@ void Game::keyboardFunc(char key, int x, int y)
 */
 void Game::run()
 {
-	keyHandler();
 	draw();
 	
 }
 
 void Game::keyHandler()
 {
-	if (_key[27])
+	
+	if(_key['w'])
+	{
+		_myCamera.moveForward(0.05f);
+	}
+	if(_key['s'])
+	{
+		_myCamera.moveForward(-0.05f);
+	}
+	if(_key['d'])
+	{
+		_myCamera.moveRight(0.05f);
+	}
+	if(_key['a'])
+	{
+		_myCamera.moveRight(-0.05f);
+	}
+	if(_key[27])
 	{
 		glutLeaveMainLoop();
+	}
+	if(_key['q'])
+	{
+		_myCamera.rotateRight(-0.05f);
+	}
+	if(_key['e'])
+	{
+		_myCamera.rotateRight(0.05f);
 	}
 
 
@@ -93,39 +127,125 @@ void Game::keyHandler()
 
 void Game::draw()
 {
+
+	if(glutGet(GLUT_ELAPSED_TIME)-_lastTimeDrawn >= 10/6)
+	{
+
+	keyHandler();
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+	Matrix4f cpm = _myCamera.getCameraFinal();
+
+
+
+	_myObjects.at(0)->setCameraPosition(_myCamera.getPosition());
+	_myObjects.at(0)->setCameraPerspective(cpm);
 	_myObjects.at(0)->draw();
 
+	_lastTimeDrawn = glutGet(GLUT_ELAPSED_TIME);
 	glutSwapBuffers();
+	}
+
 }
 
 void Game::trialSettings()
 {
-	DObject * tri = new DObject();
 
-	float verts[] = {
-		0.0f, 1.0f, 0.0f,
-		1.0f, 0.0f, 0.0f,
-		-1.0f, 0.0f, 0.0f,
-		0.0f, -1.0f, 0.0f
-	};
-
-	tri->addVertices(verts, 4);
-
-
-	int inds[] = {
-		0,	1,	2
-	};
-
-	tri->addIndexArray(inds, 3);
+	DObject * tri = new DObject("./models/teapot.obj");
 
 	tri->generateNormals();
 	tri->generateVBO();
 	tri->generateIBO();
 
 
+
 	tri->createShaderProgram("./shaders/default.vert", "./shaders/green.frag");
 
+	tri->setCameraPosition( _myCamera.getPosition());
+	tri->setLightAmbient(0.3f);
+	tri->setLightPosition(Vector3f(10.0f, 10.0f, 0.0f));
+	tri->setLightDiffuse(0.3f);
+	tri->setLightColor(Vector3f(1.0f, 1.0f, 1.0f));
+	tri->setLightSpecular(0.0f);
+
+
+
 	_myObjects.push_back(tri);
+
+
+
+	_myCamera.lookAt(1.0f, 0.0f, 1.0f);
+	_myCamera.moveTo(0.0f, 0.0f, -1.0f);
+	_myCamera.flush();
+
+
+
+}
+
+
+
+
+
+
+
+
+/*
+*	Handle for when a mouse is moved
+*/
+void Game::mouseMoved(int x, int y)
+{
+	float dx = 1.0f*x-_xm;
+	float dy = 1.0f*y-_ym;
+
+	if(!_jumped)
+	{
+		if( abs(dx) > 1)
+		{
+			_myCamera.rollRight(dx/200);
+		}
+		if( abs(dy) > 1)
+		{
+			_myCamera.rotateUp(dy/200);
+		}
+	}
+	_jumped = false;
+
+	if( _xres-x < _xres/20 || _xres-x > 19*_xres/20 || _yres-y < _yres/20 || _yres-y > 19*_yres/20)
+	{
+		_jumped = true;
+		_ym = _yres/2;
+		_xm = _xres/2;
+		glutWarpPointer(_xm,_ym);
+	}
+	else
+	{
+		_xm = x;
+		_ym = y;
+	}
+
+}
+
+/*
+*	Forces mouse to stay in frame
+*
+*/
+void Game::mouseEntered(int state)
+{
+		_jumped = true;
+		_xm = _xres/2;
+		_ym = _yres/2; 
+		glutWarpPointer(_xm,_ym);
+}
+
+
+
+
+/*
+*	Updates resolution of world for perspective
+*/
+void Game::reshape(int width, int height)
+{
+	_xres = width;
+	_yres = height;
+	_myCamera.reshape(_yres, _xres);
 }

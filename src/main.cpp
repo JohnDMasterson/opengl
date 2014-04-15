@@ -55,7 +55,7 @@ void keyboardFunc(unsigned char key, int x, int y)
 
 void keyboardLiftFunc(unsigned char key, int x, int y)
 {
-
+	_myGame->keyboardLiftFunc(key, x, y);
 }
 
 void keyboardFuncSpec(int key, int x, int y)
@@ -70,15 +70,15 @@ void keyboardLiftFuncSpec(int key, int x, int y)
 
 void reshape(int width, int height)
 {
-
+	_myGame->reshape(width, height);
 }
 
 void mouseMovement(int x, int y)
 {
-
+	_myGame->mouseMoved(x,y);
 }
 
 void mouseEntered(int state)
-{
-
+{	
+	_myGame->mouseEntered(state);
 }

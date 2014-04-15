@@ -36,7 +36,11 @@ public:
 	bool init(int argv, char** argc);
 
 	void keyboardFunc(char key, int x, int y);
+	void keyboardLiftFunc(char key, int x, int y);
+	void mouseMoved(int x, int y);
+	void mouseEntered(int state);
 
+	void reshape(int width, int height);
 
 	//functions used for game's main loop
 	void run();
@@ -55,10 +59,24 @@ private:
 
 
 	//the games needs a camera. This also deals with perspective
-	Camera * _myCamera;
+	Camera _myCamera;
 
 	//array for keys. True represents key is being pressed
 	bool _key[256];
+
+
+
+	//state variables
+	//last mouse position
+	int _xm, _ym;
+	bool _jumped;
+
+
+	//used for perspective
+	int _xres, _yres;
+	float _fov;
+	float _near, _far;
+
 
 	//boolean for game to run. Starts as false until game is initialized
 	bool _gameIsRunning;
@@ -66,7 +84,7 @@ private:
 	//these will dictate framerate and framerate limiting
 	bool _limitFramerate;
 	int _targetFPS;
-	double _lastDrawTime;
+	float _lastTimeDrawn;
 
 	//vector for holding objects in the game
 	std::vector<DObject *> _myObjects;
